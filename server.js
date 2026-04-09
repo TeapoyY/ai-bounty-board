@@ -1076,6 +1076,19 @@ app.get('/mod', async (req, res) => {
       toast.className = 'toast active' + (isError ? ' error' : '');
       setTimeout(() => toast.classList.remove('active'), 3000);
     }
+
+    function toggleDesc(btn) {
+      const p = btn.previousElementSibling;
+      if (p.classList.contains('expanded')) {
+        p.classList.remove('expanded');
+        p.textContent = decodeURIComponent(p.dataset.full).slice(0, 150) + '...';
+        btn.textContent = 'Show more ▾';
+      } else {
+        p.classList.add('expanded');
+        p.textContent = decodeURIComponent(p.dataset.full);
+        btn.textContent = 'Show less ▴';
+      }
+    }
   </script>
 </body>
 </html>
@@ -2452,16 +2465,20 @@ app.get('/', async (req, res) => {
   const bountyList = validBounties
     .filter(b => b.status === 'open')
     .slice(0, 10)
-    .map(b => `
+    .map(b => {
+      const desc = b.description || '';
+      const isLong = desc.length > 150;
+      return `
       <div class="bounty">
         <h3>${b.title || 'Untitled'}</h3>
-        <p>${(b.description || '').slice(0, 150)}${(b.description || '').length > 150 ? '...' : ''}</p>
+        <p class="bounty-desc" data-full="${encodeURIComponent(desc)}">${isLong ? (desc.slice(0, 150) + '...') : desc}</p>
+        ${isLong ? '<button class="toggle-desc" onclick="toggleDesc(this)">Show more ▾</button>' : ''}
         <div class="meta">
           <span class="reward">💰 ${b.rewardFormatted || '0 USDC'}</span>
           <span class="tags">${(b.tags || []).map(t => `<span class="tag">#${t}</span>`).join(' ')}</span>
         </div>
       </div>
-    `).join('');
+    `}).join('');
 
   res.send(`
 <!DOCTYPE html>
@@ -2542,6 +2559,17 @@ app.get('/', async (req, res) => {
       font-size: 0.8rem;
       color: #888;
     }
+    .toggle-desc {
+      background: none;
+      border: none;
+      color: #00d4ff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.3rem 0;
+      margin-top: 0.25rem;
+    }
+    .toggle-desc:hover { text-decoration: underline; }
+    .bounty-desc.expanded { white-space: pre-wrap; word-break: break-word; }
     .api-info {
       margin-top: 3rem;
       background: rgba(0,0,0,0.3);
