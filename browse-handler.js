@@ -97,7 +97,8 @@ app.get('/browse', async (req, res) => {
       '<span class="status-badge" style="background:' + (statusColors[b.status] || '#666') + '">' + (b.status || '').toUpperCase() + '</span>' +
       '<span class="reward">💰 ' + esc(b.rewardFormatted) + '</span></div>' +
       '<h3 class="bounty-title">' + esc(b.title) + '</h3>' +
-      '<p class="bounty-desc">' + esc(b.description) + '</p>' +
+      '<p class="bounty-desc" data-full="' + encodeURIComponent(b.description || '') + '">' + esc(b.description || '') + '</p>' +
+      (b.description && b.description.length > 200 ? '<button class="toggle-desc" onclick="toggleDesc(this)">Show more ▾</button>' : '') +
       '<div class="bounty-tags">' + tagsHtml + '</div>' +
       '<div class="bounty-meta">' +
       '<div class="meta-item"><span class="meta-label">Creator</span><span class="meta-value">' + (b.creator || '').slice(0,6) + '...' + (b.creator || '').slice(-4) + '</span></div>' +
@@ -229,6 +230,9 @@ app.get('/browse', async (req, res) => {
     '.reward { font-size: 1.1rem; font-weight: bold; background: linear-gradient(90deg, #00d4ff, #7b2cbf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }\n' +
     '.bounty-title { font-size: 1.2rem; margin-bottom: 0.75rem; color: #fff; }\n' +
     '.bounty-desc { color: #aaa; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem; }\n' +
+    '.toggle-desc { background: none; border: none; color: #00d4ff; cursor: pointer; font-size: 0.8rem; padding: 0.2rem 0; margin-bottom: 1rem; display: inline-block; }\n' +
+    '.toggle-desc:hover { text-decoration: underline; }\n' +
+    '.bounty-desc.expanded { white-space: pre-wrap; word-break: break-word; }\n' +
     '.bounty-tags { margin-bottom: 1rem; }\n' +
     '.tag { background: rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; color: #888; text-decoration: none; margin-right: 0.5rem; display: inline-block; margin-bottom: 0.3rem; }\n' +
     '.tag:hover { background: rgba(0,212,255,0.2); color: #00d4ff; }\n' +
@@ -595,6 +599,19 @@ app.get('/browse', async (req, res) => {
     '}\n' +
     '\n' +
     'function copyBountyId(id) { navigator.clipboard.writeText(id); showToast("Bounty ID copied!", "success"); }\n' +
+    '\n' +
+    'function toggleDesc(btn) {\n' +
+    '  var p = btn.previousElementSibling;\n' +
+    '  if (p.classList.contains("expanded")) {\n' +
+    '    p.classList.remove("expanded");\n' +
+    '    p.textContent = decodeURIComponent(p.dataset.full).slice(0, 200) + "...";\n' +
+    '    btn.textContent = "Show more ▾";\n' +
+    '  } else {\n' +
+    '    p.classList.add("expanded");\n' +
+    '    p.textContent = decodeURIComponent(p.dataset.full);\n' +
+    '    btn.textContent = "Show less ▴";\n' +
+    '  }\n' +
+    '}\n' +
     '\n' +
     '// Event delegation\n' +
     'document.addEventListener("click", function(e) {\n' +
